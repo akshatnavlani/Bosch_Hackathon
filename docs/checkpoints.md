@@ -14,51 +14,63 @@ Everyone must land ≥1 meaningful commit on the day (rules).
 
 ---
 
+## Day 1 practice incidents (locked)
+
+| ID | Flag | Expected failing service | Mentor slot |
+|----|------|--------------------------|-------------|
+| **P1** | `paymentFailure` @ 100% | `payment` | CP0 + CP1 + CP2 |
+| **P2** | `cartFailure` @ 50–100% | `cart` | CP2 |
+| **P3** | `productCatalogFailure` | `product-catalog` | CP2 |
+
+See [day1-implementation-plan.md](day1-implementation-plan.md) §0 and [faultctl-runbook.md](faultctl-runbook.md). One fault at a time; reset between runs.
+
 ## Day 1
 
 ### Checkpoint 0 — Setup (by 13:00) — **10 min mentor gate**
 
-**Outcome:** Demo + load running; faultctl inject/reset works; LLM key works; repo forked; all members committed once.
+**Outcome:** Demo + load running; inject/reset **P1** works; LLM key works; repo forked; all members committed once.
 
 | Owner | Tasks |
 |-------|-------|
-| M1 | Demo up, ports documented, inject one flag via faultctl, reset |
+| M1 | Demo up, ports documented, inject/reset **P1** via faultctl (or runbook fallback) |
 | M5 | Fork template (day-of), invite team, protect main lightly |
 | All | Clone, venv, first empty commit / team form stub |
 
-**Exit criteria:** Mentor can open `:8080`, see error after inject, see healthy after reset.
+**Exit criteria:** Mentor can open `:8080`, see checkout/payment failure after **P1**, healthy after reset.
 
 ---
 
 ### Checkpoint 1 — Eyes (by 15:30) — **10 pts**
 
-**Outcome:** Tools for logs, metrics, traces, container health; agent summarises symptoms of **one** practice incident; 1-page architecture sketch.
+**Outcome:** Tools for logs, metrics, traces, container health; agent summarises symptoms of **P1** (`paymentFailure`); 1-page architecture sketch.
 
 | Owner | Tasks |
 |-------|-------|
 | M2 | Implement 4 read tools + unit tests with live or fixture data |
 | M3 | Wire tool loop that calls tools and prints symptom summary (even if diagnosis naive) |
 | M5 | Architecture sketch (photo or `docs/architecture.md`) |
-| M1 | Keep demo stable; document PromQL examples for error rate |
+| M1 | Keep demo stable; PromQL examples for payment/checkout error rate |
 | M4 | Stub Action API client (no execute yet) |
 
-**Exit criteria:** Live run: inject incident → agent prints service symptoms with real metric/trace/log citations.
+**Exit criteria:** Live run: inject **P1** → agent prints `payment`-path symptoms with real metric/trace/log citations.
+
+**First agent demo:** after Eyes loop works (~15:30). Show **P1 only**.
 
 ---
 
 ### Checkpoint 2 — Brain (by 18:30) — **20 pts**
 
-**Outcome:** Root cause + evidence + confidence; output matches JSON schema; **≥3** practice incidents correct per mentor.
+**Outcome:** Root cause + evidence + confidence; schema-valid JSON for **P1, P2, and P3**.
 
 | Owner | Tasks |
 |-------|-------|
 | M3 | Diagnosis node, confidence policy, escalate path |
 | M2 | Tighten tool summaries so brain gets signal not noise |
 | M5 | Schema validation + sample reports folder |
-| M4 | Runbook mapper (propose only) |
-| M1 | Scripted inject matrix for 3+ practice incidents |
+| M4 | Runbook mapper propose-only (payment / cart / product-catalog) |
+| M1 | Scripted inject matrix: **P1 → reset → P2 → reset → P3** |
 
-**Exit criteria:** Mentor picks 3 incidents; agent diagnoses with non-invented evidence.
+**Exit criteria:** Sequential demos **P1 → P2 → P3** (reset between); non-invented evidence each time.
 
 **Day 1 wrap:** Tag `day1-checkpoint2`; no big refactors overnight.
 
