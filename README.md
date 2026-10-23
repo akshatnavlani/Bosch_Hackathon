@@ -22,6 +22,8 @@ It must reason from **telemetry** (metrics, traces, logs, container health), pro
 | Design + stack + repo layout | [docs/design.md](docs/design.md) |
 | Checkpoints + 5-person roles | [docs/checkpoints.md](docs/checkpoints.md) |
 | Day 1 implementation plan | [docs/day1-implementation-plan.md](docs/day1-implementation-plan.md) |
+| Demo ports + compose flags | [docs/ports.md](docs/ports.md) |
+| Demo health smoke | [scripts/smoke_demo.sh](scripts/smoke_demo.sh) (`./scripts/smoke_demo.sh`) |
 
 ## Issues
 
