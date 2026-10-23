@@ -68,7 +68,11 @@ def test_alert_source_poll_stubbed() -> None:
     assert AlertSource().poll() == []
 
 
-def test_cli_open_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_open_session(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     monkeypatch.setenv("REPORTS_DIR", str(tmp_path))
     code = main(["open-session", "--alert", str(FIXTURE)])
     captured = capsys.readouterr()
@@ -81,7 +85,9 @@ def test_cli_open_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     assert (sessions[0] / "state.json").is_file()
 
 
-def test_cli_open_session_missing_file(capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_open_session_missing_file(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     code = main(["open-session", "--alert", "/nonexistent/alert.json"])
     captured = capsys.readouterr()
     assert code == 2
