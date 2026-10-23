@@ -8,7 +8,9 @@ from typing import Any, Protocol
 from agent.config import GROQ_BASE_URL, LLMSettings
 
 PING_PROMPT = "Reply with exactly: pong"
-PING_MAX_TOKENS = 16
+# Reasoning models (e.g. Groq openai/gpt-oss-*) spend completion budget on
+# hidden thinking first; 16 tokens often yields content=null / finish_reason=length.
+PING_MAX_TOKENS = 256
 
 
 class LLMError(RuntimeError):
@@ -124,19 +126,47 @@ class _OpenAICompatibleClient:
 
     def ping(self) -> PingResult:
         client = self._get_client()
+        request: dict[str, Any] = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": PING_PROMPT}],
+            "temperature": 0,
+            # Prefer max_completion_tokens (Groq); max_tokens still works on OpenAI.
+            "max_completion_tokens": PING_MAX_TOKENS,
+        }
+        # gpt-oss / similar reasoning models on Groq need low effort + enough tokens
+        # or content comes back empty with finish_reason=length.
+        if self.provider == "groq" and _is_reasoning_model(self.model):
+            request["reasoning_effort"] = "low"
         try:
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": PING_PROMPT}],
-                max_tokens=PING_MAX_TOKENS,
-                temperature=0,
-            )
+            response = client.chat.completions.create(**request)
         except Exception as exc:
-            raise _normalize_openai_error(exc, self.provider) from exc
+            # Older OpenAI-compatible servers may reject max_completion_tokens.
+            if "max_completion_tokens" in str(exc).lower():
+                fallback = {
+                    "model": self.model,
+                    "messages": [{"role": "user", "content": PING_PROMPT}],
+                    "temperature": 0,
+                    "max_tokens": PING_MAX_TOKENS,
+                }
+                try:
+                    response = client.chat.completions.create(**fallback)
+                except Exception as retry_exc:
+                    raise _normalize_openai_error(retry_exc, self.provider) from retry_exc
+            else:
+                raise _normalize_openai_error(exc, self.provider) from exc
 
         reply = _extract_openai_reply(response)
         if not reply:
-            raise LLMError(f"Provider {self.provider} returned an empty or malformed response.")
+            finish = _finish_reason(response)
+            hint = ""
+            if finish == "length":
+                hint = (
+                    " Completion hit the token limit (often reasoning consumed the budget). "
+                    "Try a larger budget or a non-reasoning model."
+                )
+            raise LLMError(
+                f"Provider {self.provider} returned an empty or malformed response.{hint}"
+            )
         model_id = getattr(response, "model", None) or self.model
         return PingResult(model=str(model_id), reply=reply)
 
@@ -192,16 +222,38 @@ class _GeminiClient:
         return PingResult(model=str(model_id), reply=reply)
 
 
+def _is_reasoning_model(model: str) -> bool:
+    lowered = model.lower()
+    return any(token in lowered for token in ("gpt-oss", "qwen3", "muse-spark"))
+
+
+def _finish_reason(response: Any) -> str | None:
+    try:
+        choices = getattr(response, "choices", None) or []
+        if not choices:
+            return None
+        reason = getattr(choices[0], "finish_reason", None)
+        return str(reason) if reason is not None else None
+    except (AttributeError, IndexError, TypeError):
+        return None
+
+
 def _extract_openai_reply(response: Any) -> str:
     try:
         choices = getattr(response, "choices", None) or []
         if not choices:
             return ""
         message = getattr(choices[0], "message", None)
-        content = getattr(message, "content", None) if message is not None else None
-        if content is None:
+        if message is None:
             return ""
-        return str(content).strip()
+        content = getattr(message, "content", None)
+        if content is not None and str(content).strip():
+            return str(content).strip()
+        # Some providers put the only usable text in reasoning when content is empty.
+        reasoning = getattr(message, "reasoning", None)
+        if reasoning is not None and str(reasoning).strip():
+            return str(reasoning).strip()
+        return ""
     except (AttributeError, IndexError, TypeError):
         return ""
 
