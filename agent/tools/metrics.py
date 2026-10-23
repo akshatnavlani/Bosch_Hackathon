@@ -36,6 +36,7 @@ def _window_seconds(window: str | int | float | timedelta) -> float:
 def _extract_items(data: dict[str, Any], promql: str) -> tuple[list[dict[str, str]], str | None]:
     items = []
     services = set()
+    ranked_items: list[tuple[tuple[int, int, float], dict[str, str]]] = []
     for series in data.get("result", []):
         labels = series.get("metric", {})
         service_name = labels.get("service") or labels.get("service_name")
@@ -49,9 +50,18 @@ def _extract_items(data: dict[str, Any], promql: str) -> tuple[list[dict[str, st
         pointer = (
             f"{promql}{{{label_text}}} @ {timestamp}" if label_text else f"{promql} @ {timestamp}"
         )
-        items.append({"pointer": pointer, "snippet": f"value={value}"})
-        if len(items) >= MAX_ITEMS:
-            break
+        item = {"pointer": pointer, "snippet": f"value={value}"}
+        status = str(labels.get("status_code") or labels.get("http_status_code") or "")
+        metric_name = str(labels.get("__name__") or "")
+        is_5xx = status.startswith("5")
+        is_latency = "duration" in metric_name.lower() or "latency" in metric_name.lower()
+        try:
+            magnitude = abs(float(value))
+        except (TypeError, ValueError):
+            magnitude = 0.0
+        ranked_items.append(((int(is_5xx), int(is_latency), magnitude), item))
+    ranked_items.sort(key=lambda ranked: ranked[0], reverse=True)
+    items = [item for _, item in ranked_items[:MAX_ITEMS]]
     return items, next(iter(services)) if len(services) == 1 else None
 
 

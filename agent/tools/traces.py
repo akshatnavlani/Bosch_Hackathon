@@ -40,7 +40,7 @@ def _is_error(span: dict[str, Any]) -> bool:
 def _extract_error_spans(
     payload: dict[str, Any], service: str, error_only: bool, limit: int
 ) -> list[dict[str, str]]:
-    items: list[dict[str, str]] = []
+    ranked_items: list[tuple[tuple[int, int], dict[str, str]]] = []
     for trace in payload.get("data") or []:
         trace_id = str(trace.get("traceID") or "")
         processes = trace.get("processes") or {}
@@ -58,15 +58,13 @@ def _extract_error_spans(
             detail = f"service={span_service or service}; operation={operation}"
             if duration is not None:
                 detail += f"; duration={duration}μs"
-            items.append(
-                {
-                    "pointer": f"trace:{trace_id}" + (f":span:{span_id}" if span_id else ""),
-                    "snippet": detail,
-                }
-            )
-            if len(items) >= limit:
-                return items
-    return items
+            item = {
+                "pointer": f"trace:{trace_id}" + (f":span:{span_id}" if span_id else ""),
+                "snippet": detail,
+            }
+            ranked_items.append(((int(_is_error(span)), int(duration or 0)), item))
+    ranked_items.sort(key=lambda ranked: ranked[0], reverse=True)
+    return [item for _, item in ranked_items[:limit]]
 
 
 def query_traces(

@@ -55,3 +55,26 @@ def test_query_metrics_caps_number_of_items():
     assert result["ok"] is True
     assert len(result["items"]) == 20
     client.close()
+
+
+def test_query_metrics_prioritizes_5xx_and_latency_outliers():
+    payload = {
+        "status": "success",
+        "data": {
+            "result": [
+                {"metric": {"__name__": "requests", "status_code": "200"}, "values": [[1, "9"]]},
+                {"metric": {"__name__": "requests", "status_code": "500"}, "values": [[1, "2"]]},
+                {
+                    "metric": {"__name__": "http_server_duration_seconds", "status_code": "200"},
+                    "values": [[1, "99"]],
+                },
+            ]
+        },
+    }
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    )
+    result = query_metrics("up", "1m", client=client)
+    assert 'status_code="500"' in result["items"][0]["pointer"]
+    assert "duration" in result["items"][1]["pointer"]
+    client.close()
