@@ -46,7 +46,11 @@ def _extract_items(data: dict[str, Any], promql: str) -> tuple[list[dict[str, st
             continue
         timestamp, value = values[-1]
         label_text = ",".join(f'{key}="{val}"' for key, val in sorted(labels.items()))
-        pointer = f"{promql}{{{label_text}}} @ {timestamp}" if label_text else f"{promql} @ {timestamp}"
+        pointer = (
+            f"{promql}{{{label_text}}} @ {timestamp}"
+            if label_text
+            else f"{promql} @ {timestamp}"
+        )
         items.append({"pointer": pointer, "snippet": f"value={value}"})
         if len(items) >= MAX_ITEMS:
             break
@@ -69,7 +73,9 @@ def query_metrics(
     """
     query = promql.strip()
     if not query:
-        return tool_result(kind="metric", service=service, summary="PromQL query is empty", ok=False)
+        return tool_result(
+            kind="metric", service=service, summary="PromQL query is empty", ok=False
+        )
     try:
         seconds = _window_seconds(window)
     except ValueError as exc:
@@ -95,7 +101,8 @@ def query_metrics(
         if payload.get("status") != "success":
             return tool_result(
                 kind="metric", service=service,
-                summary=str(payload.get("error", "Prometheus returned a non-success status")), ok=False,
+                summary=str(payload.get("error", "Prometheus returned a non-success status")),
+                ok=False,
             )
         items, found_service = _extract_items(payload.get("data", {}), query)
         service = service or found_service

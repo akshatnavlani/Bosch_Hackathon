@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import httpx
-
 from agent.tools.metrics import query_metrics
 
 FIXTURE = Path(__file__).parent / "fixtures" / "prometheus_range.json"
@@ -17,7 +16,9 @@ def test_query_metrics_returns_compact_fixture_evidence():
         return httpx.Response(200, json=payload)
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
-    result = query_metrics('sum(rate(http_requests_total{status_code="500"}[5m]))', "5m", client=client)
+    result = query_metrics(
+        'sum(rate(http_requests_total{status_code="500"}[5m]))', "5m", client=client
+    )
 
     assert result["ok"] is True
     assert result["kind"] == "metric"
@@ -48,7 +49,9 @@ def test_query_metrics_caps_number_of_items():
             ]
         },
     }
-    client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload)))
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    )
     result = query_metrics("up", "1m", client=client)
     assert result["ok"] is True
     assert len(result["items"]) == 20
