@@ -8,14 +8,16 @@ import sys
 from pathlib import Path
 
 from agent.adapters.alert_source import AlertSource
+from agent.config import ConfigError, load_llm_settings
 from agent.graph import investigate
+from agent.llm import LLMError, create_llm_client
 from agent.state import IncidentState
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="incident-zero", description="AI On-Call Engineer")
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("ping-llm", help="Smoke-test LLM connectivity (implemented in D1-04)")
+    sub.add_parser("ping-llm", help="Smoke-test LLM connectivity")
     open_session = sub.add_parser(
         "open-session",
         help="Open an investigation session from a mock alert JSON file",
@@ -41,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command is None:
         parser.print_help()
         return 0
+
+    if args.command == "ping-llm":
+        return _cmd_ping_llm()
 
     if args.command == "open-session":
         alert_path = Path(args.alert)
@@ -91,7 +96,6 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
     stubs = {
-        "ping-llm": "ping-llm is not implemented yet; see issue D1-04.",
         "dry-run": "dry-run is not implemented yet.",
         "kill": "kill is not implemented yet.",
     }
@@ -99,6 +103,23 @@ def main(argv: list[str] | None = None) -> int:
         print(stubs[args.command], file=sys.stderr)
         return 2
 
+    return 0
+
+
+def _cmd_ping_llm() -> int:
+    try:
+        settings = load_llm_settings()
+        client = create_llm_client(settings)
+        result = client.ping()
+    except ConfigError as exc:
+        print(f"configuration error: {exc}", file=sys.stderr)
+        return 2
+    except LLMError as exc:
+        print(f"llm error: {exc}", file=sys.stderr)
+        return 1
+    print(f"Provider: {settings.provider}")
+    print(f"Model: {result.model}")
+    print(f"Reply: {result.reply.splitlines()[0] if result.reply else ''}")
     return 0
 
 
