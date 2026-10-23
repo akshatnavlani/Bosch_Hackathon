@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 _PROMPT_DIR = Path(__file__).parent
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_prompt(stage: str) -> str:
     """Load a checked-in prompt by stage name."""
     if stage not in {"investigate", "diagnose", "report"}:
