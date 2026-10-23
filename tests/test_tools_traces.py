@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import httpx
 import json
-
+import httpx
 from agent.tools.base import MAX_ITEMS
 from agent.tools.traces import DEFAULT_LIMIT, MAX_LIMIT, query_traces
 
