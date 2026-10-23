@@ -134,7 +134,9 @@ def test_query_logs_empty_hits_ok() -> None:
 
 def test_query_logs_backend_missing_connection_error() -> None:
     transport = _FakeTransport(
-        error=httpx.ConnectError("Connection refused", request=httpx.Request("POST", "http://os:9200/x")),
+        error=httpx.ConnectError(
+            "Connection refused", request=httpx.Request("POST", "http://os:9200/x")
+        ),
     )
     with httpx.Client(transport=transport) as client:
         result = query_logs("payment", base_url="http://os:9200", client=client)
