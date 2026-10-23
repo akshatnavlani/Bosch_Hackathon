@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 from agent.adapters.alert_source import AlertSource
+from agent.graph import investigate
+from agent.state import IncidentState
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,7 +26,14 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="Path to mock alert JSON",
     )
-    sub.add_parser("run", help="Run an investigation (stub; later issues)")
+    run = sub.add_parser("run", help="Run the read-only symptom investigation")
+    run_source = run.add_mutually_exclusive_group(required=True)
+    run_source.add_argument(
+        "--alert", metavar="PATH", help="Mock alert JSON to open and investigate"
+    )
+    run_source.add_argument(
+        "--session-dir", metavar="PATH", help="Existing session directory from open-session"
+    )
     sub.add_parser("dry-run", help="Preview actions without writing (stub; later issues)")
     sub.add_parser("kill", help="Engage kill switch (stub; later issues)")
     args = parser.parse_args(argv)
@@ -47,9 +56,42 @@ def main(argv: list[str] | None = None) -> int:
         print(f"session_dir={state.session_dir}")
         return 0
 
+    if args.command == "run":
+        try:
+            if args.alert:
+                state = AlertSource().from_file(args.alert)
+            else:
+                state_path = Path(args.session_dir) / "state.json"
+                if not state_path.is_file():
+                    raise ValueError(f"session state not found: {state_path}")
+                state = IncidentState.model_validate_json(state_path.read_text(encoding="utf-8"))
+            report = investigate(state)
+            print(f"Incident {report['incident_id']} — symptom summary")
+            print(report["symptom_summary"])
+            print("Evidence:")
+            if report["evidence"]:
+                for item in report["evidence"]:
+                    print(
+                        f"- [{item['kind']}/{item.get('service') or 'unknown'}] "
+                        f"{item['snippet']} ({item['pointer']})"
+                    )
+            else:
+                print("- No evidence items returned.")
+            if state.session_dir:
+                session_dir = Path(state.session_dir)
+                (session_dir / "state.json").write_text(
+                    state.model_dump_json(indent=2) + "\n", encoding="utf-8"
+                )
+                (session_dir / "symptoms.json").write_text(
+                    json.dumps(report, indent=2) + "\n", encoding="utf-8"
+                )
+            return 0
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            print(f"investigation failed: {exc}", file=sys.stderr)
+            return 2
+
     stubs = {
         "ping-llm": "ping-llm is not implemented yet; see issue D1-04.",
-        "run": "run is not implemented yet.",
         "dry-run": "dry-run is not implemented yet.",
         "kill": "kill is not implemented yet.",
     }
