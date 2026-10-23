@@ -5,9 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from jsonschema.exceptions import ValidationError
-
 from agent.reporting.schema_validate import is_valid_report, load_schema, validate_report
+from jsonschema.exceptions import ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,7 +30,7 @@ def _minimal_report(**overrides: object) -> dict:
         "evidence": [
             {
                 "kind": "metric",
-                "pointer": "promql:rate(http_requests_total{service=\"payment\",status=~\"5..\"}[5m])",
+                "pointer": 'promql:rate(http_requests_total{service="payment"}[5m])',
                 "snippet": "payment 5xx rate ~0.92",
                 "service": "payment",
             }
