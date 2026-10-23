@@ -100,6 +100,41 @@ def test_query_logs_filters_and_maps_snippets() -> None:
     assert {"match": {"body": "timeout"}} in must
 
 
+def test_query_logs_prioritizes_errors_and_latency_over_newer_info() -> None:
+    transport = _FakeTransport(
+        {
+            "hits": {
+                "hits": [
+                    _hit(
+                        body="routine request",
+                        level="INFO",
+                        hit_id="info",
+                        ts="2026-10-23T12:02:00Z",
+                    ),
+                    _hit(
+                        body="request timed out",
+                        level="WARN",
+                        hit_id="timeout",
+                        ts="2026-10-23T12:01:00Z",
+                    ),
+                    _hit(
+                        body="upstream returned 503",
+                        level="ERROR",
+                        hit_id="error",
+                        ts="2026-10-23T12:00:00Z",
+                    ),
+                ]
+            }
+        }
+    )
+    with httpx.Client(transport=transport) as client:
+        result = query_logs("payment", limit=2, client=client)
+    assert [item["pointer"] for item in result["items"]] == [
+        "log:payment:error",
+        "log:payment:timeout",
+    ]
+
+
 def test_query_logs_hard_limit_clamp() -> None:
     transport = _FakeTransport({"hits": {"hits": []}})
     with httpx.Client(transport=transport) as client:
