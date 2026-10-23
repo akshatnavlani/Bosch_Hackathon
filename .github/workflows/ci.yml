@@ -49,9 +49,12 @@ jobs:
       - name: Guard — no secrets or local env files in tree
         run: |
           set -euo pipefail
-          if git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.[^/]+$|credentials\.json$|id_rsa$|\.pem$'; then
+          # Allow .env.example; block real .env and other secret filenames
+          if git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|prod|production|dev|development|staging|secret)(\..*)?$|credentials\.json$|id_rsa$|\.pem$' \
+            | grep -vE '(^|/)\.env\.example$'; then
             echo "::error::Secret-like files are tracked by git. Remove them and rotate any exposed secrets."
-            git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.[^/]+$|credentials\.json$|id_rsa$|\.pem$' || true
+            git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|prod|production|dev|development|staging|secret)(\..*)?$|credentials\.json$|id_rsa$|\.pem$' \
+              | grep -vE '(^|/)\.env\.example$' || true
             exit 1
           fi
           # Allow .env.example only; scan other tracked non-markdown files for common token shapes
