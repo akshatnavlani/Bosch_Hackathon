@@ -25,13 +25,3 @@ Return a concise structured diagnosis with `component`, `cause`, `confidence`
 `uncertain` and `escalate` when evidence is absent, thin, ambiguous, or
 conflicting, or when confidence is below 0.75. When unsure, prefer escalation
 with the known findings and the specific evidence gap over a guessed diagnosis.
-
-## Output format
-
-Return ONLY a single JSON object, with no prose and no code fences:
-
-{"component": "...", "cause": "...", "confidence": 0.0,
- "evidence": [{"kind": "...", "pointer": "...", "snippet": "...", "service": "..."}],
- "uncertain": false, "escalate": false, "escalation_reason": ""}
-
-`kind` must be exactly one of: trace, metric, log, health.

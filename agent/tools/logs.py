@@ -103,6 +103,19 @@ def _hit_to_item(hit: dict[str, Any], service: str) -> dict[str, str]:
     return {"pointer": pointer, "snippet": snippet}
 
 
+def _hit_priority(hit: dict[str, Any]) -> tuple[int, str]:
+    source = hit.get("_source") or {}
+    level = str(_field(source, "severity.text") or "").upper()
+    body = str(_field(source, "body") or "").lower()
+    priority = {"FATAL": 4, "CRITICAL": 4, "ERROR": 3, "WARN": 2, "WARNING": 2}.get(level, 0)
+    if "5xx" in body or any(f" {code}" in body for code in range(500, 600)):
+        priority += 2
+    if "latency" in body or "timeout" in body or "timed out" in body:
+        priority += 1
+    # OpenSearch returns newest first; retain that ordering among equal priorities.
+    return priority, str(_field(source, "observedTimestamp", "time") or "")
+
+
 def query_logs(
     service: str,
     level: str | None = None,
@@ -169,7 +182,8 @@ def query_logs(
             http.close()
 
     hits = (data.get("hits") or {}).get("hits") or []
-    items = [_hit_to_item(h, service) for h in hits[:size]]
+    ranked_hits = sorted(hits, key=_hit_priority, reverse=True)[:size]
+    items = [_hit_to_item(h, service) for h in ranked_hits]
 
     filters: list[str] = [f"service={service}"]
     if level:

@@ -81,6 +81,19 @@ def test_query_traces_can_return_non_error_spans() -> None:
     assert "tags" not in str(result)
 
 
+def test_query_traces_prioritizes_errors_then_long_durations() -> None:
+    slow = _span(trace_id="slow", error=False)
+    slow["spans"][0]["duration"] = 9000
+    fast_error = _span(trace_id="error", error=True)
+    payload = {"data": [slow, fast_error]}
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ) as client:
+        result = query_traces("payment", error=False, client=client)
+    assert result["items"][0]["pointer"].startswith("trace:error:")
+    assert result["items"][1]["pointer"].startswith("trace:slow:")
+
+
 def test_query_traces_caps_top_k_to_shared_compact_limit() -> None:
     payload = {"data": [_span(trace_id=f"trace-{i}", span_id=f"span-{i}") for i in range(25)]}
     requests: list[httpx.Request] = []

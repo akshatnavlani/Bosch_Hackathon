@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from agent.prompts import DIAGNOSE_PROMPT, INVESTIGATE_PROMPT
 from agent.state import IncidentState
 from agent.tools.health import container_health
 from agent.tools.logs import query_logs
@@ -23,6 +24,13 @@ ERROR_RATE_QUERY = (
     '{status_code="STATUS_CODE_ERROR"}[1m]))'
 )
 MAX_TOOL_ROUNDS = 4
+
+# Expose the checked-in system prompts to graph nodes. Diagnosis is introduced
+# by D1-14; keeping its prompt loaded here gives that node one canonical source.
+STAGE_PROMPTS = {
+    "investigate": INVESTIGATE_PROMPT,
+    "diagnose": DIAGNOSE_PROMPT,
+}
 
 
 def _service_for_alert(alert: dict[str, Any]) -> str:

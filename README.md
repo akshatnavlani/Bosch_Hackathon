@@ -41,6 +41,16 @@ pip install -e ".[dev]"
 ruff check . && ruff format --check . && pytest -q
 ```
 
+### LLM smoke test
+
+Copy [`.env.example`](.env.example) to `.env`, set `LLM_PROVIDER` and only that provider's credentials, then:
+
+```bash
+python -m agent.main ping-llm
+```
+
+Supported providers: `openai`, `gemini`, `groq`, `openai_compatible` (organiser endpoint), `ollama` (no cloud key).
+
 ## Status
 
 - OpenTelemetry Demo cloned and reachable on port **8080** (use observability compose; see ports doc).
