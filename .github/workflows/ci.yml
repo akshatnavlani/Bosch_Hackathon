@@ -1,0 +1,91 @@
+# CI gate for Bosch_Hackathon / Incident Zero
+# Branch protection on `main` requires the status check named `ci`.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package + test deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Pytest
+        run: pytest -q
+
+      - name: Guard — no secrets or local env files in tree
+        run: |
+          set -euo pipefail
+          # Allow .env.example; block real .env and other secret filenames
+          if git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|prod|production|dev|development|staging|secret)(\..*)?$|credentials\.json$|id_rsa$|\.pem$' \
+            | grep -vE '(^|/)\.env\.example$'; then
+            echo "::error::Secret-like files are tracked by git. Remove them and rotate any exposed secrets."
+            git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|prod|production|dev|development|staging|secret)(\..*)?$|credentials\.json$|id_rsa$|\.pem$' \
+              | grep -vE '(^|/)\.env\.example$' || true
+            exit 1
+          fi
+          # Allow .env.example only; scan other tracked non-markdown files for common token shapes
+          if git grep -I -nE 'sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}' -- . \
+            ':(exclude).env.example' \
+            ':(exclude)**/*.md' \
+            ':(exclude).github/workflows/ci.yml'; then
+            echo "::error::Possible secret pattern found in tracked files."
+            exit 1
+          fi
+          echo "Secret/env guards passed."
+
+      - name: Guard — Actions hygiene
+        run: |
+          set -euo pipefail
+          # Build forbidden trigger name so this workflow file does not self-match
+          forbidden="$(printf '%s_%s' pull_request target)"
+          if grep -R -nE "^[[:space:]]*${forbidden}[[:space:]]*:" .github/workflows; then
+            echo "::error::${forbidden} trigger is disallowed in this repo."
+            exit 1
+          fi
+          if grep -R -nE '^[[:space:]]*(contents|packages|id-token):[[:space:]]*write[[:space:]]*$' .github/workflows; then
+            echo "::error::Write-level workflow permissions are disallowed unless the team explicitly revises this policy."
+            exit 1
+          fi
+          echo "Actions hygiene passed."
+
+      - name: Guard — PR must target main
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "${{ github.base_ref }}" != "main" ]; then
+            echo "::error::Pull requests must target main (got ${{ github.base_ref }})."
+            exit 1
+          fi
