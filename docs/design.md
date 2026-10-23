@@ -133,6 +133,12 @@ class IncidentState(BaseModel):
 
 Investigation tools return compact summaries (top-k), not raw dumps, to stay inside context limits.
 
+### Prometheus query helper
+
+`agent.tools.metrics.query_metrics(promql, window)` queries the Prometheus range API and returns a compact `metric` result with `ok`, `service`, `summary`, and top-20 `items` containing evidence `pointer` and `snippet`. `window` accepts a Prometheus duration such as `5m`, seconds, or a Python `timedelta`; Prometheus defaults to `http://localhost:9090` and can be changed with `PROMETHEUS_URL`. The tool only performs read requests and never calls flagd.
+
+For an HTTP error rate, use `sum by (service) (rate(http_requests_total{status_code=~"5.."}[5m]))` with a `5m` window. For latency, use `histogram_quantile(0.95, sum by (le, service) (rate(http_server_duration_milliseconds_bucket[5m])))`, also with a `5m` window. Adjust metric and label names to match the running instrumentation.
+
 ## 5. Confidence policy
 
 | Confidence | Behaviour |

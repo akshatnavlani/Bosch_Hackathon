@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "matrix",
+    "result": [
+      {
+        "metric": {"__name__": "http_requests_total", "service": "checkout", "status_code": "500"},
+        "values": [[1792760000, "2"], [1792760060, "7"]]
+      }
+    ]
+  }
+}
