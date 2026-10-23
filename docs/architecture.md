@@ -34,6 +34,11 @@ One-page overview of components, tools, decision flow, and safety controls.
 
 ## Decision flow
 
+For the CP1 Eyes demo, run `incident-zero run --alert tests/fixtures/alerts/mock_p1.json`
+after injecting P1. The bounded read-only loop records each tool result in the
+session scratchpad and prints symptom findings with the original evidence pointers;
+it does not produce a root-cause diagnosis.
+
 ```
 ALERT
   → gather high-level symptoms (error rate, latency, failing service name if present)
