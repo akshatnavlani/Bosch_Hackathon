@@ -24,6 +24,7 @@ It must reason from **telemetry** (metrics, traces, logs, container health), pro
 | Day 1 implementation plan | [docs/day1-implementation-plan.md](docs/day1-implementation-plan.md) |
 | Demo ports + compose flags | [docs/ports.md](docs/ports.md) |
 | Demo health smoke | [scripts/smoke_demo.sh](scripts/smoke_demo.sh) (`./scripts/smoke_demo.sh`) |
+| Fault inject/reset (P1–P3) | [docs/faultctl-runbook.md](docs/faultctl-runbook.md) |
 
 ## Issues
 
@@ -41,6 +42,7 @@ ruff check . && ruff format --check . && pytest -q
 
 ## Status
 
-- OpenTelemetry Demo cloned and reachable on port **8080**.
-- Agent implementation starts at hackathon coding window (per rules).
+- OpenTelemetry Demo cloned and reachable on port **8080** (use observability compose; see ports doc).
+- **Day 1 practice set:** P1 `paymentFailure`, P2 `cartFailure`, P3 `productCatalogFailure` (see Day 1 plan §0).
+- Agent demos: **CP1** = P1 only; **CP2** = P1→P2→P3 sequential (reset between).
 - Action API / faultctl / official JSON schema: integrate day-of when starter kit arrives; adapters are stubbed until then.

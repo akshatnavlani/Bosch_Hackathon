@@ -7,13 +7,34 @@
 
 ---
 
+## 0. Practice incident set (Day 1 — locked)
+
+Day 1 Eyes + Brain work **only** these three injectable faults. Do not expand the practice set today (other flags are stretch / Day 2 / hidden-test risk).
+
+| ID | Inject flag (human / faultctl) | Failing service (expected) | CP use |
+|----|--------------------------------|----------------------------|--------|
+| **P1** | `paymentFailure` @ **100%** | `payment` (checkout path) | **CP0 + CP1** hero; also in CP2 matrix |
+| **P2** | `cartFailure` @ **50–100%** | `cart` | CP2 matrix |
+| **P3** | `productCatalogFailure` | `product-catalog` | CP2 matrix |
+
+**Rules**
+
+- Operator injects via [faultctl-runbook.md](faultctl-runbook.md) (or flag UI until `faultctl` arrives).
+- Agent diagnoses from **telemetry only** — never reads flagd / flag UI.
+- Same four tools for all three; evidence must name the right `service`.
+- Always **reset** the fault after each run before injecting the next.
+
+**Defer (not Day 1 focus):** `emailMemoryLeak`, `adHighCpu`, Kafka/fraud lag, AI-agent flags, multi-flag chaos.
+
+---
+
 ## 1. Day 1 outcome (definition of done)
 
 By end of Day 1 the team can demo to a mentor:
 
-1. **CP0:** Demo healthy; inject/reset one fault; LLM key works; repo usable by all 5.
-2. **CP1 Eyes:** Agent calls metrics/traces/logs/health tools and summarises **one** practice incident with real citations; architecture one-pager ready.
-3. **CP2 Brain:** Agent emits root cause + confidence + evidence for **≥3** practice incidents in (draft or official) JSON schema; low-confidence path escalates instead of inventing evidence.
+1. **CP0:** Demo healthy; inject/reset **P1** (`paymentFailure`); LLM key works; repo usable by all 5.
+2. **CP1 Eyes:** Agent summarises **P1** with real metric/trace/log/health citations; architecture one-pager ready.
+3. **CP2 Brain:** Agent emits root cause + confidence + evidence for **P1, P2, and P3** (schema-valid JSON); low-confidence path escalates instead of inventing evidence.
 
 Minimum bar from organisers: *an agent that uses tools and correctly diagnoses practice incidents with real evidence.*
 
@@ -25,11 +46,11 @@ Minimum bar from organisers: *an agent that uses tools and correctly diagnoses p
 |--------|------------|------|
 | 11:30–12:00 | Kickoff | Starter kit, Action API docs, schema, faultctl, LLM key |
 | 12:00–13:00 | Setup | Demo + load, faultctl, fork/clone, first commits |
-| **13:00** | **CP0 Setup** | Mentor confirms setup |
+| **13:00** | **CP0 Setup** | Mentor confirms setup — inject/reset **P1** |
 | 13:00–15:30 | Eyes build | Four read tools + investigate loop + symptom summary |
-| **15:30** | **CP1 Eyes** | Live run on one incident + architecture sketch |
-| 15:30–18:30 | Brain build | Diagnosis node, confidence, schema output, 3+ incidents |
-| **18:30** | **CP2 Brain** | Mentor picks ≥3 incidents; correct evidence-backed diagnoses |
+| **15:30** | **CP1 Eyes** | Live agent on **P1** only + architecture sketch |
+| 15:30–18:30 | Brain build | Diagnosis + confidence + schema; matrix for **P1–P3** |
+| **18:30** | **CP2 Brain** | Sequential demos: **P1 → reset → P2 → reset → P3** |
 | 18:45 | Wrap | Tag `day1-cp2`; no big refactors overnight |
 
 If coding is only allowed from the official start time, treat pre-day work as **planning + stubs only** and land real tool/agent code after kickoff.
@@ -56,9 +77,9 @@ M4 Action API stub + runbook propose-only (unblocks Day 2 Hands)
 |------|----------------|
 | Live Prom/Jaeger tools | Observability endpoints reachable (M1) |
 | Investigate loop | At least metrics + one other tool |
-| CP1 mentor demo | Investigate loop + one injectable incident |
+| CP1 mentor demo | Investigate loop + **P1** (`paymentFailure`) injectable |
 | Diagnosis JSON | Pydantic/schema draft (M5) + tool evidence shape (M2) |
-| CP2 mentor demo | Diagnosis node + inject matrix for 3 incidents |
+| CP2 mentor demo | Diagnosis node + inject matrix for **P1–P3** |
 
 ---
 
@@ -66,7 +87,7 @@ M4 Action API stub + runbook propose-only (unblocks Day 2 Hands)
 
 | Seat | Callsign | Day 1 ownership |
 |------|----------|-----------------|
-| M1 | Platform | Ports doc, compose health, faultctl/inject runbook, 3-incident matrix script |
+| M1 | Platform | Ports doc, compose health, faultctl/inject runbook for **P1–P3**, matrix script |
 | M2 | Eyes | `query_metrics`, `query_traces`, `query_logs`, `container_health`, summary shaping |
 | M3 | Brain | LLM ping, LangGraph investigate + diagnose, prompts, confidence/escalate |
 | M4 | Hands | Action API client stub, `propose_action` / runbook map (no execute) |
@@ -79,12 +100,12 @@ M4 Action API stub + runbook propose-only (unblocks Day 2 Hands)
 ### CP0 — Setup (issues D1-01 … D1-05)
 
 1. Document demo ports + smoke checks.
-2. Inject/reset one fault (faultctl or documented temporary path).
+2. Inject/reset **P1** (`paymentFailure` @ 100%) via faultctl or [faultctl-runbook.md](faultctl-runbook.md).
 3. Bootstrap Python package layout (`pyproject.toml`, empty packages).
 4. LLM connectivity smoke test.
 5. Team access + team-form stub + everyone can pull `main`.
 
-**Exit:** Mentor opens shop UI, sees failure after inject, healthy after reset; `ping-llm` works.
+**Exit:** Mentor opens shop UI, sees checkout/payment failure after **P1** inject, healthy after reset; `ping-llm` works.
 
 ### CP1 — Eyes (issues D1-06 … D1-13)
 
@@ -94,7 +115,7 @@ M4 Action API stub + runbook propose-only (unblocks Day 2 Hands)
 4. Architecture one-pager.
 5. Action API stub interface (no writes).
 
-**Exit:** Inject one practice incident → agent prints symptoms with metric/trace/log/health citations.
+**Exit:** Inject **P1** → agent prints symptoms citing `payment` / checkout-path telemetry (not flag names).
 
 ### CP2 — Brain (issues D1-14 … D1-20)
 
@@ -102,11 +123,11 @@ M4 Action API stub + runbook propose-only (unblocks Day 2 Hands)
 2. Confidence policy + escalate-when-unsure.
 3. Investigate/diagnose prompts (forbid flag cheating).
 4. Draft JSON schema validation + markdown report emit.
-5. Runbook mapper propose-only.
+5. Runbook mapper propose-only (map P1→payment, P2→cart, P3→product-catalog).
 6. Tool summary tightening (signal vs noise).
-7. Automated inject matrix for ≥3 practice incidents.
+7. Automated inject matrix for **P1, P2, P3** only (`D1-19`).
 
-**Exit:** Mentor-chosen 3 incidents diagnosed with non-invented evidence; schema-valid JSON on disk.
+**Exit:** Sequential mentor runs on **P1 → P2 → P3** (reset between each); schema-valid JSON under `reports/` for all three.
 
 ---
 
@@ -129,15 +150,15 @@ Execute roughly in this order; parallelise only where noted.
 | 11 | D1-13 | Action API stub | after D1-03; parallel Eyes |
 | 12 | D1-11 | Investigate loop / symptom summary | after D1-06 + one of 07–09 + D1-10 + D1-04 |
 | 13 | D1-12 | Architecture one-pager | parallel anytime after skeleton |
-| — | **CP1 gate** | Live mentor demo | |
+| — | **CP1 gate** | Live mentor demo on **P1** only | |
 | 14 | D1-16 | Schema draft + validator | after D1-03 |
 | 15 | D1-14 | Diagnosis node | after D1-11, D1-16 |
 | 16 | D1-15 | Confidence + escalate | after D1-14 |
 | 17 | D1-20 | Prompts | parallel with D1-14 |
 | 18 | D1-18 | Tighten tool summaries | after D1-11; feeds D1-14 |
 | 19 | D1-17 | Runbook propose-only | after D1-13, D1-14 |
-| 20 | D1-19 | 3+ incident matrix | after D1-02, D1-14 |
-| — | **CP2 gate** | Mentor 3-incident check | |
+| 20 | D1-19 | Inject matrix for **P1–P3** | after D1-02, D1-14 |
+| — | **CP2 gate** | Sequential **P1 → P2 → P3** mentor check | |
 
 ---
 
@@ -179,6 +200,22 @@ Diagnosis evidence **must** copy `pointer`/`snippet` from tool `items` — never
 - Reading flagd / flag UI for diagnosis
 - Operator Streamlit polish
 - Hidden-test hardening beyond “no flag reads” in prompts
+- Practice faults outside **P1–P3**
+
+---
+
+## 7b. Demo protocol (when / how)
+
+| When | What you can show | Incidents | How |
+|------|-------------------|-----------|-----|
+| **CP0 (~13:00)** | Demo + inject/reset only (no agent required) | **P1** | Human inject → shop breaks → reset |
+| **CP1 (~15:30)** | Working Eyes agent (symptoms + citations) | **P1** only | Inject P1 → run agent → show citations → reset |
+| **CP2 (~18:30)** | Working Brain (diagnosis JSON + confidence) | **P1, then P2, then P3** | **One at a time:** inject → agent → save report → **reset** → next |
+| Overnight / Day 2 | Full Hands loop | Prefer one of P1–P3 first | After approve/act/verify exists |
+
+**Always go by each incident separately** at CP2: never leave two faults on at once. Mentors need a clean signal per service (`payment` vs `cart` vs `product-catalog`).
+
+Internal dry-run before CP2: scripted matrix runs P1→P2→P3 offline or live and writes three JSON files under `reports/`.
 
 ---
 
@@ -202,6 +239,8 @@ When kickoff materials arrive, swap in this order (do not block Eyes waiting for
 | Hallucinated evidence | Validator: evidence pointers must appear in scratchpad |
 | Merge conflicts | One package owner; branch per issue; short PRs |
 | Demo RAM pressure | Prefer minimal/observability profiles; document on 8GB machines |
+| Wrong service blamed | Practice only P1–P3; require `service` in tool evidence to match diagnosis component |
+| Overlapping faults | Hard rule: one fault active; reset before next inject |
 
 ---
 
@@ -209,7 +248,8 @@ When kickoff materials arrive, swap in this order (do not block Eyes waiting for
 
 - [ ] Architecture one-pager (`docs/architecture.md` or whiteboard photo)
 - [ ] Working tools + investigate loop
-- [ ] ≥3 practice diagnoses with evidence JSON under `reports/`
+- [ ] Diagnoses for **P1, P2, P3** with evidence JSON under `reports/`
+- [ ] Inject/reset runbook covers P1–P3 ([faultctl-runbook.md](faultctl-runbook.md))
 - [ ] Draft evaluation notes started (`team/evaluation-note.md`)
 - [ ] Tag `day1-cp2` on `main`
 - [ ] No Action API writes without approval code paths merged yet (Hands stub only)

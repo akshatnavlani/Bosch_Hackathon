@@ -71,6 +71,16 @@ ALERT
 | Agent orchestrator + UI | Local Python process in this repo |
 | LLM | Organiser API key **or** local Ollama as fallback |
 
+## Day 1 practice incidents
+
+| ID | Fault | Diagnose via |
+|----|-------|--------------|
+| P1 | `paymentFailure` | metrics/traces/logs/health on `payment` / checkout path |
+| P2 | `cartFailure` | same tools on `cart` |
+| P3 | `productCatalogFailure` | same tools on `product-catalog` |
+
+Never diagnose by reading flags. Operator inject/reset: `docs/faultctl-runbook.md`.
+
 ## Repo boundary
 
 - `opentelemetry-demo/` — **untouched** (vendor app under test).

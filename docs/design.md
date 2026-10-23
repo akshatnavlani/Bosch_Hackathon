@@ -155,15 +155,15 @@ Never invent evidence. If tool returns empty, say so.
 1. Unit: schema validation, kill switch, approval blocking.
 2. Contract: tools against live Prometheus when demo up.
 3. Fixture: offline bundles for brain path without Docker.
-4. Golden: 3 practice incidents must produce non-empty evidence arrays.
+4. Golden: practice incidents **P1/P2/P3** (`paymentFailure`, `cartFailure`, `productCatalogFailure`) must each produce non-empty evidence arrays naming the right service.
 
 ## 8. Day-of integration points (stubs until kickoff)
 
 | Interface | Stub behaviour | Real behaviour |
 |-----------|----------------|----------------|
 | `ActionAPIClient` | Log payload, return `{ok: true, stub: true}` | HTTP to organiser Action API |
-| `AlertSource` | CLI `inject --incident payment_fail` | Webhook / Prom alert |
-| `faultctl` | Documented manual steps | Organiser CLI |
+| `AlertSource` | CLI `inject --incident P1` (`paymentFailure`) | Webhook / Prom alert |
+| `faultctl` | [faultctl-runbook.md](faultctl-runbook.md) for P1–P3 | Organiser CLI |
 | Report schema | Our draft Pydantic | Replace with official schema file |
 
 ## 9. Risks

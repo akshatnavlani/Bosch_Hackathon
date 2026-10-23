@@ -22,8 +22,8 @@ When a cloud-native app fails, the first hour of on-call work is mostly searchin
 | P0 | Human approval gate, dry-run mode, kill switch |
 | P0 | Execute, verify recovery, rollback/escalate on failure |
 | P0 | Emit incident report matching organiser JSON schema |
-| P1 | Correct diagnosis on ≥3 practice incidents (CP2) |
-| P1 | Full loop alert→recovery on ≥1 incident (CP3) |
+| P1 | Correct diagnosis on Day 1 practice set **P1–P3** (`paymentFailure`, `cartFailure`, `productCatalogFailure`) at CP2 |
+| P1 | Full loop alert→recovery on ≥1 of those (prefer P1) at CP3 |
 | P2 | Stretch: incident memory, reviewer agent, chat approval UI, calibrated confidence |
 
 ## 3. Non-goals / constraints
@@ -76,8 +76,8 @@ When a cloud-native app fails, the first hour of on-call work is mostly searchin
 
 | Area | Points | Product implication |
 |------|-------:|---------------------|
-| CP1 Eyes | 10 | Tools + symptom summary must work live |
-| CP2 Brain | 20 | Evidence-backed diagnosis on ≥3 incidents |
+| CP1 Eyes | 10 | Tools + symptom summary live on **P1** (`paymentFailure`) |
+| CP2 Brain | 20 | Evidence-backed diagnosis on **P1, P2, P3** (sequential) |
 | CP3 Hands | 20 | Full approve→act→verify loop + action log |
 | CP4 Hidden | 30 | Generalise; no flag cheating; escalate when unsure |
 | Judges | 20 | Safety, tool use, explainability, honesty, demo |
@@ -87,3 +87,4 @@ When a cloud-native app fails, the first hour of on-call work is mostly searchin
 - Organisers provide: Action API, faultctl, template repo, JSON schema, LLM key, practice incidents.
 - Until then we stub Action API + alert webhook interfaces behind adapters.
 - OTel Demo already running locally (`:8080`); observability stack may need `compose.observability.yaml` if Jaeger/Grafana not up.
+- **Day 1 practice set (team choice):** P1=`paymentFailure`@100%, P2=`cartFailure`@50–100%, P3=`productCatalogFailure`. Details: [day1-implementation-plan.md](day1-implementation-plan.md) §0.
