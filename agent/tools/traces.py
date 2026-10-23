@@ -91,9 +91,7 @@ def query_traces(
     service = str(service).strip()
     limit = _clamp_limit(limit if limit is not None else DEFAULT_LIMIT)
     if not lookback or not str(lookback).strip():
-        return tool_result(
-            kind="trace", service=service, summary="lookback is required", ok=False
-        )
+        return tool_result(kind="trace", service=service, summary="lookback is required", ok=False)
 
     url = (base_url or os.getenv("JAEGER_URL") or DEFAULT_JAEGER_URL).rstrip("/")
     params: dict[str, str | int] = {
@@ -132,7 +130,6 @@ def query_traces(
     items = _extract_error_spans(payload, service, error, limit)
     qualifier = "error span(s)" if error else "span(s)"
     summary = (
-        f"{len(items)} {qualifier} for service={service} in the last {lookback} "
-        f"(limit={limit})"
+        f"{len(items)} {qualifier} for service={service} in the last {lookback} (limit={limit})"
     )
     return tool_result(kind="trace", service=service, summary=summary, items=items)
