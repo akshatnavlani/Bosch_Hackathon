@@ -1,0 +1,14 @@
+{
+  "status": "firing",
+  "labels": {
+    "alertname": "HighErrorRate",
+    "severity": "critical",
+    "service": "checkout",
+    "job": "otel-demo"
+  },
+  "annotations": {
+    "summary": "Elevated error rate on checkout path",
+    "description": "Error rate exceeded threshold for the checkout / payment path."
+  },
+  "startsAt": "2026-10-23T10:00:00Z"
+}

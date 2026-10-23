@@ -1,0 +1,43 @@
+---
+description: Always satisfy Ruff lint/format before commit or PR — CI fails on violations
+alwaysApply: true
+---
+
+# Ruff CI gate (mandatory)
+
+This repo’s GitHub Actions `ci` job runs `ruff check .` and `ruff format --check .` before pytest. Lint/format failures block merge. This has already caused repeated CI failures — do not skip.
+
+## Before every commit that touches Python
+
+1. Run from the repo root (use the project venv if needed):
+
+```bash
+ruff check .
+ruff format --check .
+```
+
+2. If either fails, fix **before** committing (prefer `ruff check --fix .` and `ruff format .`, then re-check).
+3. Do not push or open/update a PR until both commands exit 0.
+4. After substantive Python edits, also run the relevant pytest targets; lint alone is not enough, but lint is never optional.
+
+## Project config (do not violate)
+
+- Line length: **100** (`pyproject.toml` → `[tool.ruff] line-length = 100`)
+- Selected rules include **E501** (line too long) — wrap signatures, calls, and strings
+- Target: Python 3.11+
+
+## Common failure to avoid
+
+```python
+# BAD — E501 (>100 cols)
+def test_cli_open_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+
+# GOOD
+def test_cli_open_session(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+```
+
+Never disable Ruff broadly (`# noqa` on whole files, ignoring CI) to “make green.” Fix the style issue instead.
