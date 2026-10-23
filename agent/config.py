@@ -25,7 +25,7 @@ SUPPORTED_PROVIDERS: frozenset[str] = frozenset(
 DEFAULT_MODELS: dict[str, str] = {
     "openai": "gpt-4o-mini",
     "gemini": "gemini-3.5-flash-lite",
-    "groq": "llama-3.1-8b-instant",
+    "groq": "openai/gpt-oss-20b",
     "ollama": "llama3.2",
 }
 

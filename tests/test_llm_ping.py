@@ -235,6 +235,7 @@ def test_create_openai_client_pings_once(
     kwargs = mock_create.call_args.kwargs
     assert kwargs["model"] == "gpt-4o-mini"
     assert kwargs["messages"][0]["content"] == "Reply with exactly: pong"
+    assert kwargs["max_completion_tokens"] == 256
 
 
 def test_groq_uses_groq_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -249,11 +250,13 @@ def test_groq_uses_groq_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
     import openai as openai_mod
 
     monkeypatch.setattr(openai_mod, "OpenAI", _FakeOpenAI)
-    settings = LLMSettings(provider="groq", model="llama-3.1-8b-instant", groq_api_key="gsk")
+    settings = LLMSettings(provider="groq", model="openai/gpt-oss-20b", groq_api_key="gsk")
     result = create_llm_client(settings).ping()
     assert result.reply == "pong"
     assert captured["base_url"] == "https://api.groq.com/openai/v1"
     assert captured["api_key"] == "gsk"
+    assert mock_create.call_args.kwargs.get("reasoning_effort") == "low"
+    assert mock_create.call_args.kwargs.get("max_completion_tokens") == 256
 
 
 def test_openai_compatible_uses_compat_credentials(
