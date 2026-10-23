@@ -47,9 +47,7 @@ def _extract_items(data: dict[str, Any], promql: str) -> tuple[list[dict[str, st
         timestamp, value = values[-1]
         label_text = ",".join(f'{key}="{val}"' for key, val in sorted(labels.items()))
         pointer = (
-            f"{promql}{{{label_text}}} @ {timestamp}"
-            if label_text
-            else f"{promql} @ {timestamp}"
+            f"{promql}{{{label_text}}} @ {timestamp}" if label_text else f"{promql} @ {timestamp}"
         )
         items.append({"pointer": pointer, "snippet": f"value={value}"})
         if len(items) >= MAX_ITEMS:
@@ -100,18 +98,23 @@ def query_metrics(
         payload = response.json()
         if payload.get("status") != "success":
             return tool_result(
-                kind="metric", service=service,
+                kind="metric",
+                service=service,
                 summary=str(payload.get("error", "Prometheus returned a non-success status")),
                 ok=False,
             )
         items, found_service = _extract_items(payload.get("data", {}), query)
         service = service or found_service
         return tool_result(
-            kind="metric", service=service,
-            summary=f"Prometheus returned {len(items)} series for the last {window}", items=items,
+            kind="metric",
+            service=service,
+            summary=f"Prometheus returned {len(items)} series for the last {window}",
+            items=items,
         )
     except (httpx.HTTPError, ValueError, TypeError, KeyError) as exc:
         return tool_result(
-            kind="metric", service=service,
-            summary=f"Prometheus query failed: {str(exc)[:160]}", ok=False,
+            kind="metric",
+            service=service,
+            summary=f"Prometheus query failed: {str(exc)[:160]}",
+            ok=False,
         )

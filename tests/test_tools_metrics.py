@@ -44,8 +44,7 @@ def test_query_metrics_caps_number_of_items():
         "status": "success",
         "data": {
             "result": [
-                {"metric": {"instance": str(index)}, "values": [[1, "1"]]}
-                for index in range(30)
+                {"metric": {"instance": str(index)}, "values": [[1, "1"]]} for index in range(30)
             ]
         },
     }
