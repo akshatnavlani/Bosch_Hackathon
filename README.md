@@ -19,6 +19,7 @@ It must reason from **telemetry** (metrics, traces, logs, container health), pro
 |-----|------|
 | PRD | [docs/PRD.md](docs/PRD.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
+| Architecture one-pager (CP1) | [docs/architecture-one-pager.md](docs/architecture-one-pager.md) |
 | Design + stack + repo layout | [docs/design.md](docs/design.md) |
 | Checkpoints + 5-person roles | [docs/checkpoints.md](docs/checkpoints.md) |
 | Day 1 implementation plan | [docs/day1-implementation-plan.md](docs/day1-implementation-plan.md) |
