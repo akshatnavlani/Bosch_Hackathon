@@ -1,4 +1,4 @@
-"""Read-only investigation tools."""
+"""Read-only investigation tools and propose-only runbook helpers."""
 
 from agent.tools.metrics import query_metrics
 
