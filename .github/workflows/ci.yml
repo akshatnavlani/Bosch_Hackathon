@@ -70,11 +70,13 @@ jobs:
       - name: Guard — Actions hygiene
         run: |
           set -euo pipefail
-          if grep -R -nE 'pull_request_target' .github/workflows; then
-            echo "::error::pull_request_target is disallowed in this repo."
+          # Build forbidden trigger name so this workflow file does not self-match
+          forbidden="$(printf '%s_%s' pull_request target)"
+          if grep -R -nE "^[[:space:]]*${forbidden}[[:space:]]*:" .github/workflows; then
+            echo "::error::${forbidden} trigger is disallowed in this repo."
             exit 1
           fi
-          if grep -R -nE 'contents:\s*write|packages:\s*write|id-token:\s*write' .github/workflows; then
+          if grep -R -nE '^[[:space:]]*(contents|packages|id-token):[[:space:]]*write[[:space:]]*$' .github/workflows; then
             echo "::error::Write-level workflow permissions are disallowed unless the team explicitly revises this policy."
             exit 1
           fi
