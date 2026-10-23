@@ -2,8 +2,116 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://incident-zero.local/schemas/incident_report.schema.json",
   "title": "IncidentReport",
-  "description": "Draft placeholder; replace with organiser schema in D1-16.",
+  "description": "Day-1 draft incident report. Replace with the organiser official schema at kickoff.",
   "type": "object",
   "additionalProperties": true,
-  "properties": {}
+  "required": [
+    "incident_id",
+    "status",
+    "timeline",
+    "root_cause",
+    "confidence",
+    "evidence"
+  ],
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "investigating",
+        "diagnosed",
+        "escalated",
+        "proposed",
+        "resolved"
+      ]
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["ts", "event"],
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string",
+            "minLength": 1
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "root_cause": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["component", "summary"],
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["kind", "pointer", "snippet"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["metric", "trace", "log", "health"]
+          },
+          "pointer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "snippet": {
+            "type": "string",
+            "minLength": 1
+          },
+          "service": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["action_type", "target", "params"],
+      "properties": {
+        "action_type": {
+          "type": "string",
+          "enum": ["restart", "toggle_flag", "throttle_loadgen", "scale"]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    }
+  }
 }
