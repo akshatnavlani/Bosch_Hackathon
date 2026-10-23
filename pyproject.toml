@@ -32,6 +32,9 @@ incident-zero = "agent.main:main"
 [tool.setuptools.packages.find]
 include = ["agent*"]
 
+[tool.setuptools.package-data]
+"agent.prompts" = ["*.md"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
