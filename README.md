@@ -30,6 +30,15 @@ It must reason from **telemetry** (metrics, traces, logs, container health), pro
 Day 1 work is tracked on:  
 https://github.com/akshatnavlani/Bosch_Hackathon/issues
 
+## Contributing / CI
+
+`main` is **protected**: no direct pushes. Open a PR; the **`ci`** check (lint + tests + secret/actions guards) must pass and at least one review is required. See [docs/branch-protection.md](docs/branch-protection.md).
+
+```bash
+pip install -e ".[dev]"
+ruff check . && ruff format --check . && pytest -q
+```
+
 ## Status
 
 - OpenTelemetry Demo cloned and reachable on port **8080**.
