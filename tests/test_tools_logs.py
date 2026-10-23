@@ -7,7 +7,6 @@ from typing import Any
 
 import httpx
 import pytest
-
 from agent.tools.logs import DEFAULT_LIMIT, MAX_LIMIT, query_logs
 
 
@@ -33,7 +32,12 @@ def _hit(
 class _FakeTransport(httpx.BaseTransport):
     """Capture last request and return a canned OpenSearch JSON body."""
 
-    def __init__(self, response_json: dict[str, Any] | None = None, *, error: Exception | None = None):
+    def __init__(
+        self,
+        response_json: dict[str, Any] | None = None,
+        *,
+        error: Exception | None = None,
+    ):
         self.response_json = response_json
         self.error = error
         self.last_request: httpx.Request | None = None
@@ -57,7 +61,12 @@ def test_query_logs_filters_and_maps_snippets() -> None:
             "hits": {
                 "hits": [
                     _hit(body="payment timeout to bank", level="ERROR", hit_id="h1"),
-                    _hit(body="retry scheduled", level="WARN", hit_id="h2", ts="2026-10-23T11:59:00Z"),
+                    _hit(
+                        body="retry scheduled",
+                        level="WARN",
+                        hit_id="h2",
+                        ts="2026-10-23T11:59:00Z",
+                    ),
                 ]
             }
         }
