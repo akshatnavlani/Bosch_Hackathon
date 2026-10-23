@@ -47,3 +47,4 @@ The script curls the frontend and Prometheus (required), plus Jaeger/Grafana via
 - Do **not** diagnose via feature-flag / flagd APIs.
 - Do **not** execute Action API writes (stubs / propose-only only on Day 1).
 - Investigation tools should use Prometheus / Jaeger / logs / container health — not flag config.
+- Practice injects for Day 1 are only **P1–P3** — see [faultctl-runbook.md](faultctl-runbook.md) and [day1-implementation-plan.md](day1-implementation-plan.md) §0.
