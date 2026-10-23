@@ -131,5 +131,8 @@ def query_traces(
 
     items = _extract_error_spans(payload, service, error, limit)
     qualifier = "error span(s)" if error else "span(s)"
-    summary = f"{len(items)} {qualifier} for service={service} in the last {lookback} (limit={limit})"
+    summary = (
+        f"{len(items)} {qualifier} for service={service} in the last {lookback} "
+        f"(limit={limit})"
+    )
     return tool_result(kind="trace", service=service, summary=summary, items=items)
